@@ -915,14 +915,16 @@
 
   function updateClock() {
     const now = new Date();
+    const tz = 'Europe/Berlin';
     const days = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
-    const dd = String(now.getDate()).padStart(2,'0');
-    const mm = String(now.getMonth()+1).padStart(2,'0');
-    const yyyy = now.getFullYear();
-    document.getElementById('dateEl').textContent = `${days[now.getDay()]} · ${dd}.${mm}.${yyyy}`;
-    const hh = String(now.getHours()).padStart(2,'0');
-    const mi = String(now.getMinutes()).padStart(2,'0');
-    document.getElementById('timeEl').textContent = `${hh}:${mi}`;
+    // Datum-Teile in Berliner Zeitzone holen
+    const parts = new Intl.DateTimeFormat('de-DE', {
+      timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', weekday: 'long', hour12: false
+    }).formatToParts(now).reduce((a,p) => (a[p.type] = p.value, a), {});
+    document.getElementById('dateEl').textContent =
+      `${parts.weekday.charAt(0).toUpperCase() + parts.weekday.slice(1)} · ${parts.day}.${parts.month}.${parts.year}`;
+    document.getElementById('timeEl').textContent = `${parts.hour}:${parts.minute}`;
   }
 
   function yearFraction() {
@@ -1615,7 +1617,7 @@
     updateClock();
     updateYearProgress();
     render();   // initialer Demo-Render
-    setInterval(updateClock, 30 * 1000);
+    setInterval(updateClock, 20 * 1000);
     setInterval(updateYearProgress, 60 * 60 * 1000);
 
     bindSetupModal();
