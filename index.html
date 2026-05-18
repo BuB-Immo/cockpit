@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=1920, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
@@ -11,6 +11,7 @@
   /* ====== Reset / Base ====== */
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: 100%; height: 100%; overflow: hidden; }
+  body { display: flex; align-items: center; justify-content: center; }
   :root {
     --bg-0: #07090f;
     --bg-1: #0d1220;
@@ -42,8 +43,10 @@
 
   /* ====== Layout ====== */
   .stage {
-    width: 100vw;
-    height: 100vh;
+    width: 1920px;
+    height: 1080px;
+    flex-shrink: 0;
+    transform-origin: center center;
     padding: 28px 36px 28px 36px;
     display: grid;
     grid-template-rows: 76px 1fr 1fr 132px;
@@ -579,12 +582,7 @@
   .diag .kv { font-size: 11px; }
   .diag .kv span:first-child { display: inline-block; width: 200px; color: var(--text-muted); }
 
-  /* responsive: small screen guard */
-  @media (max-width: 1280px) {
-    .stage { grid-template-columns: 1fr 1fr; grid-template-rows: 76px auto auto auto auto; }
-    .hero { grid-column: 1 / -1; grid-template-columns: 1fr; text-align: center; }
-    .lifetime { grid-template-columns: 1fr 1fr; }
-  }
+  /* responsive: small screen guard — entfernt, da Stage jetzt per JS skaliert wird */
 </style>
 </head>
 <body>
@@ -953,14 +951,14 @@
 
   function updateClock() {
     const now = new Date();
-    const days = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
-    const dd = String(now.getDate()).padStart(2,'0');
-    const mm = String(now.getMonth()+1).padStart(2,'0');
-    const yyyy = now.getFullYear();
-    document.getElementById('dateEl').textContent = `${days[now.getDay()]} · ${dd}.${mm}.${yyyy}`;
-    const hh = String(now.getHours()).padStart(2,'0');
-    const mi = String(now.getMinutes()).padStart(2,'0');
-    document.getElementById('timeEl').textContent = `${hh}:${mi}`;
+    const tz = 'Europe/Berlin';
+    const parts = new Intl.DateTimeFormat('de-DE', {
+      timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', weekday: 'long', hour12: false
+    }).formatToParts(now).reduce((a,p) => (a[p.type] = p.value, a), {});
+    document.getElementById('dateEl').textContent =
+      `${parts.weekday.charAt(0).toUpperCase() + parts.weekday.slice(1)} · ${parts.day}.${parts.month}.${parts.year}`;
+    document.getElementById('timeEl').textContent = `${parts.hour}:${parts.minute}`;
   }
 
   function yearFraction() {
@@ -1704,8 +1702,19 @@
     }
   });
 
+  // ----- TV/Display Auto-Scaling -----
+  // Stage ist fix 1920x1080. Auf jeden Viewport einpassen (Letterbox/Pillarbox).
+  function fitStage() {
+    const stage = document.querySelector('.stage');
+    if (!stage) return;
+    const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    stage.style.transform = 'scale(' + scale + ')';
+  }
+
   // ----- Boot -----
   function boot() {
+    fitStage();
+    window.addEventListener('resize', fitStage);
     updateClock();
     updateYearProgress();
     render();   // initialer Demo-Render
