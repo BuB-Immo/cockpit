@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=1920, initial-scale=1" />
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
@@ -11,7 +11,6 @@
   /* ====== Reset / Base ====== */
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: 100%; height: 100%; overflow: hidden; }
-  body { display: flex; align-items: center; justify-content: center; }
   :root {
     --bg-0: #07090f;
     --bg-1: #0d1220;
@@ -43,10 +42,8 @@
 
   /* ====== Layout ====== */
   .stage {
-    width: 1920px;
-    height: 1080px;
-    flex-shrink: 0;
-    transform-origin: center center;
+    width: 100vw;
+    height: 100vh;
     padding: 28px 36px 28px 36px;
     display: grid;
     grid-template-rows: 76px 1fr 1fr 132px;
@@ -137,6 +134,39 @@
     transition: width 1.4s ease-out;
   }
   .hero-pct { font-size: 28px; font-weight: 700; color: var(--gold-bright); margin-top: 14px; }
+
+  /* Hero-Substats rechts: „davon verkauft" + „im Bestand" als Funnel-Stages */
+  .hero-substats {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    align-items: flex-end;
+    text-align: right;
+  }
+  .hero-substat-label {
+    font-size: 12px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-weight: 600;
+  }
+  .hero-substat-num {
+    font-size: 58px;
+    font-weight: 900;
+    color: var(--text);
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin-top: 4px;
+  }
+  .hero-substat-num.green { color: var(--green); }
+  .hero-substat-foot {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    margin-top: 4px;
+    font-weight: 600;
+  }
 
   /* ====== Cards ====== */
   .card {
@@ -391,7 +421,7 @@
     border-radius: 20px;
     padding: 22px 36px;
     display: grid;
-    grid-template-columns: auto 1fr 1fr 1fr 1fr;
+    grid-template-columns: auto 1fr 1fr 1fr;
     gap: 36px;
     align-items: center;
     box-shadow: var(--shadow-card);
@@ -549,7 +579,12 @@
   .diag .kv { font-size: 11px; }
   .diag .kv span:first-child { display: inline-block; width: 200px; color: var(--text-muted); }
 
-  /* responsive: small screen guard — entfernt, da Stage jetzt per JS skaliert wird */
+  /* responsive: small screen guard */
+  @media (max-width: 1280px) {
+    .stage { grid-template-columns: 1fr 1fr; grid-template-rows: 76px auto auto auto auto; }
+    .hero { grid-column: 1 / -1; grid-template-columns: 1fr; text-align: center; }
+    .lifetime { grid-template-columns: 1fr 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -562,7 +597,7 @@
       <div class="brand-mark">B&amp;B</div>
       <div class="brand-text">
         <div class="title">B&amp;B Immo Cockpit</div>
-        <div class="subtitle" id="taglineEl">Vision 1000 · Brot &amp; Butter Live</div>
+        <div class="subtitle" id="taglineEl">Vision 1000 · Brot &amp; Butter Live · v2026-05-18</div>
       </div>
     </div>
     <div class="clock">
@@ -585,10 +620,17 @@
       <div class="of">von <b>1.000</b> Einheiten · seit Gründung</div>
       <div class="vision-bar"><div class="vision-bar-fill" id="visionBarEl"></div></div>
     </div>
-    <div>
-      <div class="hero-label" style="text-align:right;">Bestand</div>
-      <div style="text-align:right; font-size: 76px; font-weight: 900; color: var(--text); letter-spacing: -0.04em; line-height:1; margin-top:8px;" id="inRealEl">0</div>
-      <div style="text-align:right; color: var(--text-dim); font-size:14px; margin-top:6px; text-transform:uppercase; letter-spacing:0.18em;">in Entwicklung + Verkauf</div>
+    <div class="hero-substats">
+      <div class="hero-substat">
+        <div class="hero-substat-label">davon verkauft</div>
+        <div class="hero-substat-num green" id="lifetimeSoldEl">0</div>
+        <div class="hero-substat-foot" id="lifetimeSoldPctEl">— %</div>
+      </div>
+      <div class="hero-substat">
+        <div class="hero-substat-label">im Bestand</div>
+        <div class="hero-substat-num" id="bestandEl">0</div>
+        <div class="hero-substat-foot">kommt noch</div>
+      </div>
     </div>
   </section>
 
@@ -738,24 +780,20 @@
     </div>
   </section>
 
-  <!-- Lifetime -->
+  <!-- Lifetime — nur Volumen (Stückzahlen oben in Vision 1000 schon) -->
   <footer class="lifetime">
     <div class="lt-label">Gesamt<br/>Lifetime<small>seit Gründung</small></div>
-    <div class="lt-stat">
-      <div class="num" id="ltBoughtEl">0</div>
-      <div class="lbl">Einheiten gekauft</div>
-    </div>
     <div class="lt-stat">
       <div class="num gold" id="ltBoughtVolEl">0 €</div>
       <div class="lbl">Einkauf GIK</div>
     </div>
     <div class="lt-stat">
-      <div class="num green" id="ltSoldEl">0</div>
-      <div class="lbl">Einheiten verkauft</div>
-    </div>
-    <div class="lt-stat">
       <div class="num green" id="ltSoldVolEl">0 €</div>
       <div class="lbl">Verkaufsvolumen</div>
+    </div>
+    <div class="lt-stat">
+      <div class="num" id="ltMargeEl">0 €</div>
+      <div class="lbl">Differenz GIK ↔ Verkauf</div>
     </div>
   </footer>
 
@@ -915,16 +953,14 @@
 
   function updateClock() {
     const now = new Date();
-    const tz = 'Europe/Berlin';
     const days = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
-    // Datum-Teile in Berliner Zeitzone holen
-    const parts = new Intl.DateTimeFormat('de-DE', {
-      timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit',
-      hour: '2-digit', minute: '2-digit', weekday: 'long', hour12: false
-    }).formatToParts(now).reduce((a,p) => (a[p.type] = p.value, a), {});
-    document.getElementById('dateEl').textContent =
-      `${parts.weekday.charAt(0).toUpperCase() + parts.weekday.slice(1)} · ${parts.day}.${parts.month}.${parts.year}`;
-    document.getElementById('timeEl').textContent = `${parts.hour}:${parts.minute}`;
+    const dd = String(now.getDate()).padStart(2,'0');
+    const mm = String(now.getMonth()+1).padStart(2,'0');
+    const yyyy = now.getFullYear();
+    document.getElementById('dateEl').textContent = `${days[now.getDay()]} · ${dd}.${mm}.${yyyy}`;
+    const hh = String(now.getHours()).padStart(2,'0');
+    const mi = String(now.getMinutes()).padStart(2,'0');
+    document.getElementById('timeEl').textContent = `${hh}:${mi}`;
   }
 
   function yearFraction() {
@@ -1000,9 +1036,17 @@
     animateNumber(document.getElementById('visionNumEl'), MOCK.lifetime.bought);
     setTimeout(() => setVisionBar((MOCK.lifetime.bought / MOCK.visionTarget) * 100), 200);
 
-    // In Realisierung
-    const inReal = MOCK.pipeline.bought + MOCK.pipeline.development + MOCK.pipeline.forSale;
-    animateNumber(document.getElementById('inRealEl'), inReal);
+    // Hero-Substats: davon verkauft + im Bestand
+    const ltSold = MOCK.lifetime.sold || 0;
+    const ltBought = MOCK.lifetime.bought || 0;
+    const bestand = Math.max(0, ltBought - ltSold);
+    animateNumber(document.getElementById('lifetimeSoldEl'), ltSold);
+    animateNumber(document.getElementById('bestandEl'), bestand);
+    const pctEl = document.getElementById('lifetimeSoldPctEl');
+    if (pctEl) {
+      const pct = ltBought > 0 ? (ltSold / ltBought) * 100 : 0;
+      pctEl.textContent = pct.toFixed(0) + ' % vom Eingekauften';
+    }
 
     // 2026 — Counter (Umsatz kompakt: "3,22 Mio €")
     animateNumber(document.getElementById('sold2026El'), MOCK.year2026.sold);
@@ -1117,11 +1161,15 @@
       }
     }
 
-    // Lifetime — Volumen kompakt
-    animateNumber(document.getElementById('ltBoughtEl'), MOCK.lifetime.bought);
+    // Lifetime — nur Volumen (Stückzahlen sind oben im Hero)
     animateNumber(document.getElementById('ltBoughtVolEl'), MOCK.lifetime.boughtVolume, { formatter: eurCompact, duration: 2000 });
-    animateNumber(document.getElementById('ltSoldEl'), MOCK.lifetime.sold);
     animateNumber(document.getElementById('ltSoldVolEl'), MOCK.lifetime.soldVolume, { formatter: eurCompact, duration: 2000 });
+    const marge = (MOCK.lifetime.soldVolume || 0) - (MOCK.lifetime.boughtVolume || 0);
+    const margeEl = document.getElementById('ltMargeEl');
+    if (margeEl) {
+      margeEl.textContent = (marge >= 0 ? '+' : '−') + eurCompact(Math.abs(marge));
+      margeEl.style.color = marge >= 0 ? 'var(--green)' : 'var(--orange)';
+    }
   }
 
   // ----- Demo: Auto-Pulse a fake new sale every 90s (Beta-Vorschau) -----
@@ -1177,16 +1225,21 @@
     soldLifetime:['Beurkundet', 'Kaufpreis gezahlt', 'Betreuung'],
   };
 
-  // Manuelle Korrektur für historisch ungepflegte Verkäufe (Stand 08.05.2026)
+  // Manuelle Sammel-Korrektur für historisch ungepflegte Verkäufe (Stand 08.05.2026)
   // 32 WEs verkauft 2024-2025 ohne Verkauft-WE-Record in Airtable.
   // Quelle: Archiv-CSV Verkaufsliste Schenki — abgeglichen mit Edgars Bestätigung.
   // Zusammensetzung:
   //   PR 6  STE_ENGEL7 (Stegen Engelbergstr.):  9 WEs · 1.360.000 €
   //   PR 21 KEHL_BER6 (Berliner Str. 6, Kehl): 14 WEs · 2.233.700 €
   //   PR 26 KARL_SCHNEI22C (Karlsruhe):         9 WEs · 2.161.000 €
+  //
+  // DYNAMIK: Sobald Domi für eine dieser 32 WEs einen Verkauft-WE-Record nachpflegt,
+  // reduziert sich die Korrektur automatisch (vermeidet Doppelzählung).
   const LIFETIME_CORRECTION = {
-    sold: 32,
-    revenue: 5_754_700,
+    baseSold: 32,
+    baseRevenue: 5_754_700,
+    // Record-IDs der 3 Cluster-Projekte (aus Airtable Projekt-Tabelle)
+    clusterProjectIds: ['recVfskhnr1SSxjYG', 'recXWLyxDt90xuf7u', 'recMRn4TrQd7SZTAz'],
     note: 'historische Sammel-Korrektur (STE_ENGEL7 + KEHL_BER6 + KARL_SCHNEI22C)',
   };
 
@@ -1327,7 +1380,9 @@
     const yearStartISO = `${today.getFullYear()}-01-01`;
     const yearEndISO   = `${today.getFullYear()+1}-01-01`;
     const todayISO     = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-    const priceOf = v => v.fields['Finaler Kaufpreis'] ?? v.fields['Kaufpreis im Vertrag'] ?? 0;
+    // Edgar 18.05.2026: Wir messen notariell verkaufte Preise → IMMER „Kaufpreis im Vertrag".
+    // Fallback auf „Finaler Kaufpreis" nur, falls Vertragspreis (noch) leer ist.
+    const priceOf = v => v.fields['Kaufpreis im Vertrag'] ?? v.fields['Finaler Kaufpreis'] ?? 0;
 
     // Notartermin-stattgefunden = Lifetime-relevant (egal welches Jahr)
     const verkauftDone = bbiVerkauft.filter(v => {
@@ -1359,12 +1414,34 @@
     const pipelineSold2026  = sales2026Future.length;
     const pipelineRev2026   = sales2026Future.reduce((a,v) => a + priceOf(v), 0);
 
-    // ---------- 3. Lifetime — NUR Notartermin stattgefunden + Sammel-Korrektur ----------
+    // ---------- 3. Lifetime — NUR Notartermin stattgefunden + dynamische Sammel-Korrektur ----------
     const lifetimeBoughtWE = bbiWE.length;
     const recordsSold      = verkauftDone.length;
     const recordsRevenue   = verkauftDone.reduce((a,v) => a + priceOf(v), 0);
-    const lifetimeSoldWE   = recordsSold + LIFETIME_CORRECTION.sold;
-    const lifetimeRevenue  = recordsRevenue + LIFETIME_CORRECTION.revenue;
+
+    // Wie viele Verkauft-WE-Records gehören zu den 3 Cluster-Projekten?
+    // (= bereits nachgepflegte alte Verkäufe, die nicht mehr in die Sammel-Korrektur dürfen)
+    const clusterSet = new Set(LIFETIME_CORRECTION.clusterProjectIds);
+    const weToProjekt = new Map();
+    for (const w of bbiWE) {
+      const projLink = w.fields['Projekt'] || [];
+      const projId = typeof projLink[0] === 'string' ? projLink[0] : projLink[0]?.id;
+      if (projId) weToProjekt.set(w.id, projId);
+    }
+    let clusterRecordsCount = 0;
+    for (const v of verkauftDone) {
+      const weLink = v.fields['Wohneinheit'] || [];
+      const weId = typeof weLink[0] === 'string' ? weLink[0] : weLink[0]?.id;
+      const projId = weToProjekt.get(weId);
+      if (projId && clusterSet.has(projId)) clusterRecordsCount++;
+    }
+    const effectiveCorrectionSold = Math.max(0, LIFETIME_CORRECTION.baseSold - clusterRecordsCount);
+    const correctionRatio = LIFETIME_CORRECTION.baseSold > 0
+      ? effectiveCorrectionSold / LIFETIME_CORRECTION.baseSold : 0;
+    const effectiveCorrectionRevenue = Math.round(LIFETIME_CORRECTION.baseRevenue * correctionRatio);
+
+    const lifetimeSoldWE   = recordsSold + effectiveCorrectionSold;
+    const lifetimeRevenue  = recordsRevenue + effectiveCorrectionRevenue;
 
     // ---------- 4. Letzter Verkauf ----------
     const lastSaleRec = verkauftDone
@@ -1454,8 +1531,9 @@
         // Lifetime-Korrektur transparent machen
         recordsSold: recordsSold,
         recordsRevenue: recordsRevenue,
-        correctionSold: LIFETIME_CORRECTION.sold,
-        correctionRevenue: LIFETIME_CORRECTION.revenue,
+        correctionSold: effectiveCorrectionSold,
+        correctionRevenue: effectiveCorrectionRevenue,
+        clusterRecordsCount,
         bestand: lifetimeBoughtWE - lifetimeSoldWE,
       },
     };
@@ -1507,6 +1585,8 @@
 
   let liveTimer = null;
   let demoTimer = null;
+  let watchdogTimer = null;
+  let lastSuccessfulTick = 0;       // Unix-ms vom letzten erfolgreichen Fetch
 
   async function tickLive(token, targets) {
     try {
@@ -1515,10 +1595,32 @@
       renderLive(metrics, data.bbiProjectIds.size);
       const t = new Date(); const hh = String(t.getHours()).padStart(2,'0'); const mi = String(t.getMinutes()).padStart(2,'0');
       setLiveBadge('live', 'Live · ' + hh + ':' + mi);
+      lastSuccessfulTick = Date.now();
     } catch (e) {
       console.error(e);
       setLiveBadge('error', 'Fehler · ' + e.message.slice(0,40));
     }
+  }
+
+  // Watchdog: prüft 1× pro Minute, ob der letzte Fetch zu lange her ist.
+  // Hintergrund: Silk Browser auf FireTV pausiert setInterval nach Standby — daher Selbstheilung.
+  //   >10 Min ohne frische Daten → Badge wird gelb („Live · stale")
+  //   >15 Min ohne frische Daten → ganze Seite neu laden (location.reload)
+  function startWatchdog() {
+    if (watchdogTimer) clearInterval(watchdogTimer);
+    watchdogTimer = setInterval(() => {
+      if (!lastSuccessfulTick) return;
+      const ageMin = (Date.now() - lastSuccessfulTick) / 60000;
+      if (ageMin > 15) {
+        console.warn('[Watchdog] Daten älter als 15 Min → location.reload()');
+        location.reload();
+      } else if (ageMin > 10) {
+        const t = new Date(lastSuccessfulTick);
+        const hh = String(t.getHours()).padStart(2,'0');
+        const mi = String(t.getMinutes()).padStart(2,'0');
+        setLiveBadge('error', 'Stale · ' + hh + ':' + mi);
+      }
+    }, 60 * 1000);
   }
 
   async function startLiveMode(token, targets) {
@@ -1527,6 +1629,7 @@
     await tickLive(token, targets);
     if (liveTimer) clearInterval(liveTimer);
     liveTimer = setInterval(() => tickLive(token, targets), 5 * 60 * 1000); // alle 5 Min
+    startWatchdog();
   }
 
   function startDemoMode() {
@@ -1601,23 +1704,12 @@
     }
   });
 
-  // ----- TV/Display Auto-Scaling -----
-  // Stage ist fix 1920x1080. Auf jeden Viewport einpassen (Letterbox/Pillarbox).
-  function fitStage() {
-    const stage = document.querySelector('.stage');
-    if (!stage) return;
-    const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
-    stage.style.transform = 'scale(' + scale + ')';
-  }
-
   // ----- Boot -----
   function boot() {
-    fitStage();
-    window.addEventListener('resize', fitStage);
     updateClock();
     updateYearProgress();
     render();   // initialer Demo-Render
-    setInterval(updateClock, 20 * 1000);
+    setInterval(updateClock, 30 * 1000);
     setInterval(updateYearProgress, 60 * 60 * 1000);
 
     bindSetupModal();
